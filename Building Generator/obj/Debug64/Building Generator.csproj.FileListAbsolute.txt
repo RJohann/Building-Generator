@@ -1,0 +1,5 @@
+C:\Users\Ryan Johann\OneDrive\1 CODE3156\Building Generator\Building Generator\bin\Building Generator.dll
+C:\Users\Ryan Johann\OneDrive\1 CODE3156\Building Generator\Building Generator\bin\Building Generator.pdb
+C:\Users\Ryan Johann\OneDrive\1 CODE3156\Building Generator\Building Generator\obj\Debug64\Building Generator.csprojResolveAssemblyReference.cache
+C:\Users\Ryan Johann\OneDrive\1 CODE3156\Building Generator\Building Generator\obj\Debug64\Building Generator.dll
+C:\Users\Ryan Johann\OneDrive\1 CODE3156\Building Generator\Building Generator\obj\Debug64\Building Generator.pdb
