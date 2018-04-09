@@ -6,6 +6,7 @@ using Rhino.Geometry;
 using Rhino.Input;
 using Rhino.Input.Custom;
 
+
 namespace Building_Generator
 {
     [System.Runtime.InteropServices.Guid("8a0a7978-0e9a-4793-8595-99ac18f3b928")]
@@ -33,7 +34,7 @@ namespace Building_Generator
 
         protected override Result RunCommand(RhinoDoc doc, RunMode mode)
         {
-            //select a site curve
+            // 1 - Select a site curve
 
             GetObject obj = new GetObject();
             obj.GeometryFilter = Rhino.DocObjects.ObjectType.Curve;
@@ -57,19 +58,58 @@ namespace Building_Generator
                 return Result.Failure; //Failed to get a curve
             }
 
-            //extract the border from the precinct surface
-            Curve[] offsets = site.Offset(Plane.WorldXY, -3000, RhinoDoc.ActiveDoc.ModelAbsoluteTolerance, CurveOffsetCornerStyle.Chamfer);
+            // 1 - Select a site curve FINISHED
+
+            // 2 - Extract the border from the precinct surface
+            Curve[] offsets = site.Offset(Plane.WorldXY, -2000, RhinoDoc.ActiveDoc.ModelAbsoluteTolerance, CurveOffsetCornerStyle.Chamfer);
             Curve[] joinedoffset = Curve.JoinCurves(offsets); //join offset curves
 
             List<Extrusion> buildings = new List<Extrusion>(); //create a empty list of extrusions to store buildings
 
-            foreach (Curve itOff in joinedoffset)
+            Curve[] offsets1 = site.Offset(Plane.WorldXY, -4000, RhinoDoc.ActiveDoc.ModelAbsoluteTolerance, CurveOffsetCornerStyle.Chamfer);
+            Curve[] joinedoffset1 = Curve.JoinCurves(offsets1); //join offset curves
+
+            //Curve ApartmentOultine = null;
+
+            //if (joinedoffset.Length == 1)
+            //    ApartmentOultine = joinedoffset[0];
+
+            //if (ApartmentOultine == null)
+            //    return Result.Failure;
+
+            //foreach (Curve ShopCrv in joinedoffset)
+
+            //Extrusion.Create(ApartmentOultine, 5000, true);
+
+
+            foreach (Curve ShopCrv in joinedoffset)
             {
-                Extrusion bld = Extrusion.Create(itOff, 1000, true);
-                buildings.Add(bld);
-                RhinoDoc.ActiveDoc.Objects.AddExtrusion(bld);
+                Extrusion Shop = Extrusion.Create(ShopCrv, 3000, true);
+                buildings.Add(Shop);
+                RhinoDoc.ActiveDoc.Objects.AddExtrusion(Shop);
             }
-            RhinoDoc.ActiveDoc.Views.Redraw();
+                RhinoDoc.ActiveDoc.Views.Redraw();
+
+            // 2 - Extrude the shop level FINISHED
+
+                       
+            //Extrusion Apartments
+
+            // 3 - Extrude basement (7 spaces)
+            //Extrusion of basement
+            foreach (Curve ShopCrv in joinedoffset1)
+            {
+                Extrusion Shop = Extrusion.Create(ShopCrv, -2800, true);
+                buildings.Add(Shop);
+                RhinoDoc.ActiveDoc.Objects.AddExtrusion(Shop);
+            }
+                RhinoDoc.ActiveDoc.Views.Redraw();
+
+            // Extrude aprtment levels 
+
+
+
+
 
             return Result.Success;
         }
