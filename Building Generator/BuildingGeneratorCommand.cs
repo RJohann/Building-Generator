@@ -12,6 +12,8 @@ namespace Building_Generator
     [System.Runtime.InteropServices.Guid("8a0a7978-0e9a-4793-8595-99ac18f3b928")]
     public class BuildingGeneratorCommand : Command
     {
+        private Brep Buildings;
+
         public BuildingGeneratorCommand()
         {
             // Rhino only creates one instance of each command class defined in a
@@ -44,7 +46,7 @@ namespace Building_Generator
 
             Curve site;
 
-            if(res != GetResult.Object)
+            if (res != GetResult.Object)
             {
                 RhinoApp.WriteLine("The user did not select a curve");
                 return Result.Failure; // Failed to get a curve 
@@ -58,60 +60,90 @@ namespace Building_Generator
                 return Result.Failure; //Failed to get a curve
             }
 
-            // 1 - Select a site curve FINISHED
 
+          
             // 2 - Extract the border from the precinct surface
-            Curve[] offsets = site.Offset(Plane.WorldXY, -2000, RhinoDoc.ActiveDoc.ModelAbsoluteTolerance, CurveOffsetCornerStyle.Chamfer);
+            //Offset for Shop
+            Curve[] offsets = site.Offset(Plane.WorldXY, -2.5, RhinoDoc.ActiveDoc.ModelAbsoluteTolerance, CurveOffsetCornerStyle.Chamfer);
             Curve[] joinedoffset = Curve.JoinCurves(offsets); //join offset curves
 
-            List<Extrusion> buildings = new List<Extrusion>(); //create a empty list of extrusions to store buildings
+            //Offset for Apartment
+            Curve[] offsetBst = site.Offset(Plane.WorldXY, -4, RhinoDoc.ActiveDoc.ModelAbsoluteTolerance, CurveOffsetCornerStyle.Chamfer);
+            Curve[] joinedoffsetBst = Curve.JoinCurves(offsetBst); //join offset curves
 
-            Curve[] offsets1 = site.Offset(Plane.WorldXY, -4000, RhinoDoc.ActiveDoc.ModelAbsoluteTolerance, CurveOffsetCornerStyle.Chamfer);
-            Curve[] joinedoffset1 = Curve.JoinCurves(offsets1); //join offset curves
+            //Offset for Base
+            Curve[] offsetTop = site.Offset(Plane.WorldXY, -3, RhinoDoc.ActiveDoc.ModelAbsoluteTolerance, CurveOffsetCornerStyle.Chamfer);
+            Curve[] joinedoffsetTop = Curve.JoinCurves(offsetTop); //join offset curves
 
-            //Curve ApartmentOultine = null;
-
-            //if (joinedoffset.Length == 1)
-            //    ApartmentOultine = joinedoffset[0];
-
-            //if (ApartmentOultine == null)
-            //    return Result.Failure;
-
-            //foreach (Curve ShopCrv in joinedoffset)
-
-            //Extrusion.Create(ApartmentOultine, 5000, true);
+                //List of offset curves
+            List<Curve> buildingsCrv = new List<Curve>(); 
+            buildingsCrv.AddRange(offsets);
+            buildingsCrv.AddRange(offsetBst);
+            buildingsCrv.AddRange(offsetTop);
 
 
-            foreach (Curve ShopCrv in joinedoffset)
+
+            // 3 - Extrude all the offset curves
+            //Extrusions 
+            Extrusion Shop = Extrusion.Create(buildingsCrv[0], 3.1, true);
+            Extrusion Apa = Extrusion.Create(buildingsCrv[1], 18.6, true);
+            Extrusion Base = Extrusion.Create(buildingsCrv[2], -3.1, true);
+
+                //List of extrusions                               
+            List<Extrusion> buildingsExt = new List<Extrusion>(); 
+            buildingsExt.Add(Shop);
+            buildingsExt.Add(Apa);
+            buildingsExt.Add(Base);
+
+            //Draw all the extrusions
+            foreach (Extrusion itExt in buildingsExt) 
             {
-                Extrusion Shop = Extrusion.Create(ShopCrv, 3000, true);
-                buildings.Add(Shop);
-                RhinoDoc.ActiveDoc.Objects.AddExtrusion(Shop);
+                RhinoDoc.ActiveDoc.Objects.Add(itExt);
             }
-                RhinoDoc.ActiveDoc.Views.Redraw();
 
-            // 2 - Extrude the shop level FINISHED
 
-                       
-            //Extrusion Apartments
 
-            // 3 - Extrude basement (7 spaces)
-            //Extrusion of basement
-            foreach (Curve ShopCrv in joinedoffset1)
+            // 4 - Create contour lines on extrusions to represent floors
+            //Define extrusions as Breps for contours
+            Brep ShopBrep = Shop.ToBrep();
+            Brep BrepApa = Apa.ToBrep();
+
+                //List of Breps                             
+            List<Brep> BuildingBreps = new List<Brep>();
+            BuildingBreps.Add(ShopBrep);
+            BuildingBreps.Add(BrepApa);
+
+            //Points to define contours
+            Point3d start = new Point3d(0, 0, 0);
+            Point3d end = new Point3d(0, 0, 30);
+
+            //Contours
+            Curve[] Shopflr = Brep.CreateContourCurves(ShopBrep as Brep, start, end, 3.1);
+            Curve[] ApaFlr = Brep.CreateContourCurves(BrepApa as Brep, start, end, 3.1);
+
+                //List of Contour Curves                               
+            List<Curve> Floors = new List<Curve>();
+            Floors.AddRange(Shopflr);
+            Floors.AddRange(ApaFlr);
+
+            //Draw all the Contour curves
+            foreach (Curve itCrv in Floors)
             {
-                Extrusion Shop = Extrusion.Create(ShopCrv, -2800, true);
-                buildings.Add(Shop);
-                RhinoDoc.ActiveDoc.Objects.AddExtrusion(Shop);
+                RhinoDoc.ActiveDoc.Objects.Add(itCrv);
             }
-                RhinoDoc.ActiveDoc.Views.Redraw();
-
-            // Extrude aprtment levels 
 
 
 
 
+            RhinoDoc.ActiveDoc.Views.Redraw();
 
             return Result.Success;
         }
     }
 }
+
+
+
+
+
+      
